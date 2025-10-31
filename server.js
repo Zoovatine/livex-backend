@@ -5,45 +5,38 @@ import { createClient } from '@supabase/supabase-js';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
-// Initialize Express + HTTP Server
 const app = express();
 const httpServer = createServer(app);
 
-// Socket.io setup
 const io = new Server(httpServer, {
   cors: {
     origin: process.env.ALLOWED_ORIGIN?.split(',') || "*",
-    methods: ["GET", "POST"],
-  },
+    methods: ["GET", "POST"]
+  }
 });
 
 app.use(cors());
 app.use(express.json());
 
-// ✅ Fix here — use SUPABASE_KEY instead of SUPABASE_SERVICE_KEY
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+// ✅ Create Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error("❌ Missing Supabase credentials. Check Render environment variables.");
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// ✅ Simple test route
-app.get("/ping", (req, res) => {
-  res.send("✅ LiveX backend is running and Supabase is connected!");
+// ✅ Add a simple homepage route
+app.get("/", (req, res) => {
+  res.send("🚀 LiveX Backend is running!");
 });
 
-// Example: basic endpoint using Supabase
-app.get("/users", async (req, res) => {
-  const { data, error } = await supabase.from("users").select("*");
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+// ✅ Add a health check route
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", service: "LiveX" });
 });
 
-// Start server
-const PORT = process.env.PORT || 3000;
+// (You can add other routes below here, e.g. donations, events, etc.)
+
+const PORT = process.env.PORT || 10000;
 httpServer.listen(PORT, () => {
   console.log(`🚀 LiveX backend running on port ${PORT}`);
 });
